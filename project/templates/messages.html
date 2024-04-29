@@ -1,0 +1,39 @@
+{% if messages %}
+            {% for message in messages %}
+                <div class="chat-message message-left">
+                    {% if message.author == request.user %}
+                        <button class="delete-button" data-message-id="{{ message.id }}">Delete</button>
+                    {% else %}
+                    {% endif %}
+                    {% if message.images %}
+                        <img src="{{message.images.url}}" alt="image">
+                    {% endif %}
+                    {% if message.text %}
+                        <div class="message-text">{{message.text}}</div>
+                    {% endif %}
+                    <div class="message-sender">{{message.author}}</div>
+                </div>
+            {% endfor %}
+        {% else %}
+        {% endif %}
+
+<script>
+    document.querySelectorAll('.delete-button').forEach((button) => {
+        button.addEventListener('click', () => {
+          const messageId = button.dataset.messageId;
+          const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
+          fetch(`/messages/${messageId}/`, {
+            method: 'DELETE',
+            headers: {
+              'X-CSRFToken': csrfToken
+            }
+          })
+            .then(() => {
+              button.parentElement.remove();
+            })
+            .catch((error) => {
+              console.error('Error deleting message:', error);
+            });
+        });
+      });
+  </script>

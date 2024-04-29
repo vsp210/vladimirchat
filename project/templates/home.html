@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+       .chat-container {
+            max-width: 600px;
+            max-height: 650px;
+            overflow-y: scroll;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+
+       .chat-message {
+            margin-bottom: 20px;
+        }
+
+       .message-sender {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+       .message-text {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 400px;
+            word-break: break-all;
+        }
+
+       .chat-input {
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+       .chat-input input[type="text"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+       .chat-input input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .custom-file-upload {
+            border: 1px solid #ccc;
+            display: inline-block;
+            padding: 6px 12px;
+            cursor: pointer;
+          }
+
+          #images-input {
+            display: none;
+          }
+          .chat-message img {
+            max-width: 250px;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Приветствую вас в моём чате!</h1>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <input type="submit" value="Выйти">
+        </form>
+        </header>
+        <form method="post" id="chat-form" class="chat-input" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="text" name="text" placeholder="Пишите ваше сообщение здесь...">
+            <label for="images-input" class="custom-file-upload">
+                <input type="file" id="images-input" name="images" accept="image/*">
+                Отправить фото
+              </label>
+            <input type="submit" value="Отправить">
+        </form>
+    <div id="test" class="chat-container">
+    </div>
+
+    <script>
+        const form = document.getElementById('chat-form');
+
+        form.addEventListener('submit', function(event) {
+          event.preventDefault(); // prevent the page from refreshing
+
+          // send the form data asynchronously using fetch
+          fetch('', {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+              'X-CSRFToken': '{{ csrf_token }}' // include the CSRF token in the request header
+            }
+          })
+        .then(response => response.text()) // or.json() if the response is JSON
+        .then(data => {
+            // handle the response data here
+            form.reset(); // clear the text input and file input
+          })
+        .catch(error => {
+            // handle any errors here
+          });
+        });
+        async function updateDiv() {
+            const response = await fetch('messages');
+            const data = await response.text();
+            document.getElementById('test').innerHTML = data;
+
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-button').forEach((button) => {
+              button.addEventListener('click', () => {
+                const messageId = button.dataset.messageId;
+                const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
+                fetch(`/messages/${messageId}/`, {
+                  method: 'DELETE',
+                  headers: {
+                    'X-CSRFToken': csrfToken
+                  }
+                })
+                 .then(() => {
+                    button.parentElement.remove();
+                  })
+                 .catch((error) => {
+                    console.error('Error deleting message:', error);
+                  });
+              });
+            });
+          }
+          setInterval(updateDiv, 1000); // refresh every 1 seconds
+
+      </script>
+</body>
+</html>
